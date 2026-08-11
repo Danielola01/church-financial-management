@@ -1,0 +1,85 @@
+{
+  "entities": {
+    "profile": {
+      "title": "Profile",
+      "description": "User profile with role-based access control.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string",
+          "format": "email"
+        },
+        "role": {
+          "type": "string",
+          "enum": ["admin", "treasurer", "viewer"]
+        },
+        "createdAt": {
+          "type": "string"
+        }
+      },
+      "required": ["name", "email", "role", "createdAt"]
+    },
+    "transaction": {
+      "title": "Transaction",
+      "description": "An income or expense record.",
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["income", "expense"]
+        },
+        "date": {
+          "type": "string"
+        },
+        "amount": {
+          "type": "number"
+        },
+        "category": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "recordedBy": {
+          "type": "string"
+        },
+        "recordedByUid": {
+          "type": "string"
+        },
+        "receiptImage": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "date",
+        "amount",
+        "category",
+        "description",
+        "recordedBy",
+        "recordedByUid",
+        "createdAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/profiles/{userId}": {
+      "schema": {
+        "$ref": "#/entities/profile"
+      },
+      "description": "User profile records containing roles and identifiers."
+    },
+    "/transactions/{transactionId}": {
+      "schema": {
+        "$ref": "#/entities/transaction"
+      },
+      "description": "Church financial income and expense transactions."
+    }
+  }
+}

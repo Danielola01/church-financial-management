@@ -1,0 +1,6 @@
+{
+  "name": "Church Financial Management System",
+  "description": "A secure digital ledger for church administration to record income collections, track operational expenses, generate reports, reassign user roles, and audit treasury statements.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

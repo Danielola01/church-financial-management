@@ -1,0 +1,30 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&family=JetBrains+Mono:wght@400;500&family=Poppins:wght@300;400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Montserrat", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  --font-poppins: "Poppins", sans-serif;
+}
+
+/* Prevent accidental horizontal page swipe/scroll on mobile devices */
+html, body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* Hide scrollbars on mobile screens (max-width: 768px) for a clean native app feel */
+@media (max-width: 768px) {
+  /* Webkit browsers (Chrome, Safari, Opera) */
+  ::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+  
+  /* IE, Edge and Firefox */
+  html, body, div, table, tbody, tr, td, th {
+    -ms-overflow-style: none !important; /* IE/Edge */
+    scrollbar-width: none !important; /* Firefox */
+  }
+}
