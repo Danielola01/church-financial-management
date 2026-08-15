@@ -291,50 +291,52 @@ export default function Reports({ transactions, userProfile, onQuickAdd }: Repor
       format: "a4"
     });
 
-    let y = 39;
+    let y = 29;
 
     // --- PAGE HEADER FUNCTION ---
-    const drawHeader = (pageNumber: number) => {
+    const drawHeader = (pageNumber: number, showPageNum: boolean = false) => {
       // Ijebu Anglican Diocese
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(9);
+      doc.setFontSize(10);
       doc.setTextColor(37, 99, 235); // Blue-600
-      doc.text("IJEBU ANGLICAN DIOCESE", 105, 16, { align: "center" });
+      doc.text("IJEBU ANGLICAN DIOCESE", 105, 11, { align: "center" });
 
       // Registered Org Name
       doc.setFont("helvetica", "bold");
       doc.setFontSize(14);
       doc.setTextColor(15, 23, 42); // Slate-900
       const orgName = (userProfile?.organizationName || "Grace Sanctuary").toUpperCase();
-      doc.text(orgName, 105, 23, { align: "center" });
+      doc.text(orgName, 105, 17, { align: "center" });
 
       // Statement of Account for the Month of...
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(11);
+      doc.setFontSize(12);
       doc.setTextColor(71, 85, 105); // Slate-600
       const periodText = timeframeFilter === "all"
         ? "Statement of Account for All Records"
         : `Statement of Account for the Month of ${getPeriodLabel()}`;
-      doc.text(periodText, 105, 29, { align: "center" });
+      doc.text(periodText, 105, 22.5, { align: "center" });
 
-      // Right-aligned Metadata
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(7.5);
-      doc.setTextColor(100, 116, 139); // Slate-500
-      doc.text(`Page ${pageNumber}`, 196, 16, { align: "right" });
+      // Right-aligned Metadata (if multi-page)
+      if (showPageNum) {
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8);
+        doc.setTextColor(100, 116, 139); // Slate-500
+        doc.text(`Page ${pageNumber}`, 196, 11, { align: "right" });
+      }
 
       // Bottom Border Line
       doc.setDrawColor(226, 232, 240); // Slate-200
       doc.setLineWidth(0.4);
-      doc.line(14, 33, 196, 33);
+      doc.line(14, 25.5, 196, 25.5);
     };
 
     // Draw Page 1 Header
-    drawHeader(1);
+    drawHeader(1, false);
 
     // --- SUMMARY CARDS ---
     const cardWidth = 57;
-    const cardHeight = 22;
+    const cardHeight = 17.5;
     const startX = 14;
     const gap = 5.5;
 
@@ -342,72 +344,72 @@ export default function Reports({ transactions, userProfile, onQuickAdd }: Repor
     doc.setFillColor(248, 250, 252); // Slate-50
     doc.setDrawColor(226, 232, 240); // Slate-200
     doc.setLineWidth(0.3);
-    doc.roundedRect(startX, y, cardWidth, cardHeight, 2, 2, "FD");
+    doc.roundedRect(startX, y, cardWidth, cardHeight, 1.5, 1.5, "FD");
 
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(7);
+    doc.setFontSize(8);
     doc.setTextColor(100, 116, 139); // Slate-500
-    doc.text("TOTAL INCOME", startX + 5, y + 6);
+    doc.text("TOTAL INCOME", startX + 4, y + 4.5);
 
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(13);
+    doc.setFontSize(12);
     doc.setTextColor(5, 150, 105); // Emerald-600
-    doc.text(`+${formatPDFCurrency(totalIncome)}`, startX + 5, y + 13);
+    doc.text(`+${formatPDFCurrency(totalIncome)}`, startX + 4, y + 10.8);
 
     doc.setFont("helvetica", "italic");
     doc.setFontSize(7);
     doc.setTextColor(148, 163, 184); // Slate-400
-    doc.text("Collections & donations", startX + 5, y + 18);
+    doc.text("Collections & donations", startX + 4, y + 15);
 
     // Render Card 2 (Outflows)
     doc.setFillColor(248, 250, 252); // Slate-50
-    doc.roundedRect(startX + cardWidth + gap, y, cardWidth, cardHeight, 2, 2, "FD");
+    doc.roundedRect(startX + cardWidth + gap, y, cardWidth, cardHeight, 1.5, 1.5, "FD");
 
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(7);
+    doc.setFontSize(8);
     doc.setTextColor(100, 116, 139); // Slate-500
-    doc.text("TOTAL EXPENSES", startX + cardWidth + gap + 5, y + 6);
+    doc.text("TOTAL EXPENSES", startX + cardWidth + gap + 4, y + 4.5);
 
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(13);
+    doc.setFontSize(12);
     doc.setTextColor(220, 38, 38); // Red-600
-    doc.text(`-${formatPDFCurrency(totalExpenses)}`, startX + cardWidth + gap + 5, y + 13);
+    doc.text(`-${formatPDFCurrency(totalExpenses)}`, startX + cardWidth + gap + 4, y + 10.8);
 
     doc.setFont("helvetica", "italic");
     doc.setFontSize(7);
     doc.setTextColor(148, 163, 184); // Slate-400
-    doc.text("Operational expenses", startX + cardWidth + gap + 5, y + 18);
+    doc.text("Operational expenses", startX + cardWidth + gap + 4, y + 15);
 
     // Render Card 3 (Balance)
     doc.setFillColor(248, 250, 252); // Slate-50
-    doc.roundedRect(startX + (cardWidth + gap) * 2, y, cardWidth, cardHeight, 2, 2, "FD");
+    doc.roundedRect(startX + (cardWidth + gap) * 2, y, cardWidth, cardHeight, 1.5, 1.5, "FD");
 
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(7);
+    doc.setFontSize(8);
     doc.setTextColor(100, 116, 139); // Slate-500
-    doc.text("TOTAL BALANCE", startX + (cardWidth + gap) * 2 + 5, y + 6);
+    doc.text("TOTAL BALANCE", startX + (cardWidth + gap) * 2 + 4, y + 4.5);
 
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(13);
+    doc.setFontSize(12);
     const balColor = totalBalance >= 0 ? [37, 99, 235] : [220, 38, 38]; // Blue-600 or Red-600
     doc.setTextColor(balColor[0], balColor[1], balColor[2]);
-    doc.text(`${totalBalance >= 0 ? "" : ""}${formatPDFCurrency(totalBalance)}`, startX + (cardWidth + gap) * 2 + 5, y + 13);
+    doc.text(`${formatPDFCurrency(totalBalance)}`, startX + (cardWidth + gap) * 2 + 4, y + 10.8);
 
     doc.setFont("helvetica", "italic");
     doc.setFontSize(7);
     doc.setTextColor(148, 163, 184); // Slate-400
-    doc.text("Net liquidity impact", startX + (cardWidth + gap) * 2 + 5, y + 18);
+    doc.text("Net liquidity impact", startX + (cardWidth + gap) * 2 + 4, y + 15);
 
-    y += cardHeight + 8;
+    y += cardHeight + 9;
 
     // --- CATEGORIES SECTION ---
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(8);
+    doc.setFontSize(11);
     doc.setTextColor(15, 23, 42); // Slate-900
 
     // Headers
-    doc.text("INFLOW CATEGORIES (REVENUES)", 14, y);
-    doc.text("OUTFLOW CATEGORIES (OPERATIONAL PAYOUTS)", 111, y);
+    doc.text("INFLOW CATEGORIES", 14, y);
+    doc.text("OUTFLOW CATEGORIES", 111, y);
 
     // Underline
     doc.setDrawColor(226, 232, 240); // Slate-200
@@ -415,14 +417,14 @@ export default function Reports({ transactions, userProfile, onQuickAdd }: Repor
     doc.line(14, y + 2, 99, y + 2);
     doc.line(111, y + 2, 196, y + 2);
 
-    y += 6;
+    y += 5.2;
 
     const maxCats = Math.max(incomeCategories.length, expenseCategories.length, 1);
-    const catRowHeight = 5;
+    const catRowHeight = 4.4;
 
     for (let i = 0; i < maxCats; i++) {
       doc.setFont("helvetica", "normal");
-      doc.setFontSize(7.5);
+      doc.setFontSize(9);
       doc.setTextColor(71, 85, 105); // Slate-600
 
       // Income category
@@ -474,97 +476,86 @@ export default function Reports({ transactions, userProfile, onQuickAdd }: Repor
       }
     }
 
-    y += (maxCats * catRowHeight) + 8;
+    y += (maxCats * catRowHeight) + 4.5;
 
     // --- LEDGER TITLE ---
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(8.5);
+    doc.setFontSize(11);
     doc.setTextColor(15, 23, 42); // Slate-900
     doc.text("AUDIT TRANSACTION LEDGER (BY DATE)", 14, y);
 
-    y += 4;
+    y += 3.5;
 
     // --- TABLE HEADERS DRAW FUNCTION ---
     const drawTableHeaders = (currentY: number) => {
-      // Main header bg (Income and Expense columns split)
       // Income Header bg
       doc.setFillColor(236, 253, 245); // Emerald-50
-      doc.rect(14, currentY, 91, 7, "F");
+      doc.rect(14, currentY, 91, 5.5, "F");
       
       // Expense Header bg
       doc.setFillColor(254, 242, 242); // Rose-50
-      doc.rect(105, currentY, 91, 7, "F");
+      doc.rect(105, currentY, 91, 5.5, "F");
 
       // Vertical line in the middle
       doc.setDrawColor(226, 232, 240); // Slate-200
-      doc.setLineWidth(0.4);
-      doc.line(105, currentY, 105, currentY + 13.5);
+      doc.setLineWidth(0.3);
+      doc.line(105, currentY, 105, currentY + 10.5);
 
       // Borders for headers
       doc.setDrawColor(226, 232, 240);
-      doc.setLineWidth(0.4);
-      doc.rect(14, currentY, 182, 13.5);
+      doc.setLineWidth(0.3);
+      doc.rect(14, currentY, 182, 10.5);
 
       // Header Texts
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(8);
+      doc.setFontSize(10.5);
       
       doc.setTextColor(6, 95, 70); // Emerald-800
-      doc.text("INCOME LEDGER", 59.5, currentY + 4.5, { align: "center" });
+      doc.text("INCOME LEDGER", 59.5, currentY + 4, { align: "center" });
 
       doc.setTextColor(153, 27, 27); // Rose-800
-      doc.text("EXPENSES LEDGER", 150.5, currentY + 4.5, { align: "center" });
+      doc.text("EXPENSES LEDGER", 150.5, currentY + 4, { align: "center" });
 
       // Column Subheaders row
       doc.setFillColor(248, 250, 252); // Slate-50
-      doc.rect(14, currentY + 7, 182, 6.5, "F");
+      doc.rect(14, currentY + 5.5, 182, 5, "F");
 
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(7.5);
+      doc.setFontSize(8.5);
       doc.setTextColor(100, 116, 139); // Slate-500
 
       // Left Side Column headers
-      doc.text("Date", 16, currentY + 11.5);
-      doc.text("Description", 36, currentY + 11.5);
-      doc.text("Amount", 103, currentY + 11.5, { align: "right" });
+      doc.text("Date", 16, currentY + 9);
+      doc.text("Description", 36, currentY + 9);
+      doc.text("Amount", 103, currentY + 9, { align: "right" });
 
       // Right Side Column headers
-      doc.text("Description", 110, currentY + 11.5);
-      doc.text("Amount", 194, currentY + 11.5, { align: "right" });
+      doc.text("Description", 110, currentY + 9);
+      doc.text("Amount", 194, currentY + 9, { align: "right" });
     };
 
-    let currentPage = 1;
     drawTableHeaders(y);
-    y += 13.5;
+    y += 10.5;
 
     if (unifiedDailyLedger.length === 0) {
       doc.setFillColor(248, 250, 252, 0.3);
-      doc.rect(14, y, 182, 15, "F");
-      doc.rect(14, y, 182, 15, "D");
+      doc.rect(14, y, 182, 12, "F");
+      doc.rect(14, y, 182, 12, "D");
       doc.setFont("helvetica", "italic");
-      doc.setFontSize(8.5);
+      doc.setFontSize(9);
       doc.setTextColor(148, 163, 184);
-      doc.text("No transactions recorded in this period.", 105, y + 9, { align: "center" });
-      y += 15;
+      doc.text("No transactions recorded in this period.", 105, y + 7, { align: "center" });
+      y += 12;
     } else {
+      // Dynamically calculate row height so that monthly ledger and signatures strictly fit on 1 single page!
+      const totalRowCount = unifiedDailyLedger.length;
+      const targetMaxY = 260; // Safe bottom limit on 297mm A4 page to leave room for signatures
+      const spaceRemaining = targetMaxY - y;
+      const calculatedRowHeight = spaceRemaining / (totalRowCount || 1);
+      const rowHeight = Math.min(5.5, Math.max(3.8, calculatedRowHeight));
+      const rowFontSize = Math.min(9.5, Math.max(7.2, rowHeight * 1.7));
+
       unifiedDailyLedger.forEach(({ income, expense, isGrandTotal }) => {
-        const rowHeight = 6;
-
-        // Check page overflow
-        if (y + rowHeight > 272) {
-          // Draw bottom line of the current page's table before breaking
-          doc.setDrawColor(226, 232, 240);
-          doc.setLineWidth(0.4);
-          doc.line(14, y, 196, y);
-
-          doc.addPage();
-          currentPage += 1;
-          drawHeader(currentPage);
-          y = 39;
-          drawTableHeaders(y);
-          y += 13.5;
-        }
-
         // Background fill
         if (isGrandTotal) {
           doc.setFillColor(241, 245, 249); // Slate-100 for Grand Total row
@@ -575,7 +566,7 @@ export default function Reports({ transactions, userProfile, onQuickAdd }: Repor
 
         // Borders for the row
         doc.setDrawColor(226, 232, 240);
-        doc.setLineWidth(0.4);
+        doc.setLineWidth(0.3);
         doc.line(14, y, 14, y + rowHeight); // Left outer boundary
         doc.line(196, y, 196, y + rowHeight); // Right outer boundary
         doc.line(105, y, 105, y + rowHeight); // Center vertical divider
@@ -583,49 +574,51 @@ export default function Reports({ transactions, userProfile, onQuickAdd }: Repor
 
         if (isGrandTotal) {
           doc.setDrawColor(203, 213, 225); // Slate-300 top border
-          doc.setLineWidth(0.6);
+          doc.setLineWidth(0.5);
           doc.line(14, y, 196, y);
         }
 
         doc.setFont("helvetica", "normal");
-        doc.setFontSize(7.5);
+        doc.setFontSize(rowFontSize);
         doc.setTextColor(71, 85, 105); // Slate-600
+
+        const textBaselineY = y + (rowHeight * 0.72);
 
         // --- INCOME COLUMN ---
         if (income) {
           // Date (if set)
           if (income.date) {
-            doc.text(income.date, 16, y + 4.5);
+            doc.text(income.date, 16, textBaselineY);
           }
 
           if (income.isTotal) {
             doc.setFont("helvetica", "bold");
             doc.setTextColor(15, 23, 42); // Slate-900
-            doc.text(income.title.toUpperCase(), 36, y + 4.5);
+            doc.text(income.title.toUpperCase(), 36, textBaselineY);
 
             // Highlight amount in Emerald
             doc.setTextColor(5, 150, 105); // Emerald-600
-            doc.text(`+${formatPDFCurrency(income.amount || 0)}`, 103, y + 4.5, { align: "right" });
+            doc.text(`+${formatPDFCurrency(income.amount || 0)}`, 103, textBaselineY, { align: "right" });
           } else if (income.isEmpty) {
             doc.setFont("helvetica", "italic");
             doc.setTextColor(148, 163, 184);
-            doc.text(income.title, 36, y + 4.5);
-            doc.text("--", 103, y + 4.5, { align: "right" });
+            doc.text(income.title, 36, textBaselineY);
+            doc.text("--", 103, textBaselineY, { align: "right" });
           } else {
             doc.setFont("helvetica", "normal");
             doc.setTextColor(51, 65, 85); // Slate-700
             let title = income.title;
             if (title.length > 32) title = title.substring(0, 30) + "...";
-            doc.text(title, 36, y + 4.5);
+            doc.text(title, 36, textBaselineY);
 
             doc.setFont("helvetica", "normal");
             doc.setTextColor(71, 85, 105);
-            doc.text(formatPDFCurrency(income.amount || 0), 103, y + 4.5, { align: "right" });
+            doc.text(formatPDFCurrency(income.amount || 0), 103, textBaselineY, { align: "right" });
           }
         } else {
-          doc.text("--", 16, y + 4.5);
-          doc.text("--", 36, y + 4.5);
-          doc.text("--", 103, y + 4.5, { align: "right" });
+          doc.text("--", 16, textBaselineY);
+          doc.text("--", 36, textBaselineY);
+          doc.text("--", 103, textBaselineY, { align: "right" });
         }
 
         // --- EXPENSES COLUMN ---
@@ -633,75 +626,65 @@ export default function Reports({ transactions, userProfile, onQuickAdd }: Repor
           if (expense.isTotal) {
             doc.setFont("helvetica", "bold");
             doc.setTextColor(15, 23, 42); // Slate-900
-            doc.text(expense.title.toUpperCase(), 110, y + 4.5);
+            doc.text(expense.title.toUpperCase(), 110, textBaselineY);
 
             // Highlight amount in Red
             doc.setTextColor(220, 38, 38); // Red-600
-            doc.text(`-${formatPDFCurrency(expense.amount || 0)}`, 194, y + 4.5, { align: "right" });
+            doc.text(`-${formatPDFCurrency(expense.amount || 0)}`, 194, textBaselineY, { align: "right" });
           } else if (expense.isEmpty) {
             doc.setFont("helvetica", "italic");
             doc.setTextColor(148, 163, 184);
-            doc.text(expense.title, 110, y + 4.5);
-            doc.text("--", 194, y + 4.5, { align: "right" });
+            doc.text(expense.title, 110, textBaselineY);
+            doc.text("--", 194, textBaselineY, { align: "right" });
           } else {
             doc.setFont("helvetica", "normal");
             doc.setTextColor(51, 65, 85); // Slate-700
             let title = expense.title;
             if (title.length > 38) title = title.substring(0, 36) + "...";
-            doc.text(title, 110, y + 4.5);
+            doc.text(title, 110, textBaselineY);
 
             doc.setFont("helvetica", "normal");
             doc.setTextColor(71, 85, 105);
-            doc.text(formatPDFCurrency(expense.amount || 0), 194, y + 4.5, { align: "right" });
+            doc.text(formatPDFCurrency(expense.amount || 0), 194, textBaselineY, { align: "right" });
           }
         } else {
-          doc.text("--", 110, y + 4.5);
-          doc.text("--", 194, y + 4.5, { align: "right" });
+          doc.text("--", 110, textBaselineY);
+          doc.text("--", 194, textBaselineY, { align: "right" });
         }
 
         y += rowHeight;
       });
     }
 
-    // Add safe margin before signatures
-    if (y > 240) {
-      doc.addPage();
-      currentPage += 1;
-      drawHeader(currentPage);
-      y = 39;
-    } else {
-      y += 12;
-    }
-
-    // --- FOOTER SIGN-OFF ---
-    const sigY = y + 10;
+    // --- FOOTER SIGN-OFF (Positioned cleanly on the same page with 12pt official names) ---
+    const sigY = Math.min(276, Math.max(y + 8, 260));
 
     // Left signature line
     doc.setDrawColor(203, 213, 225); // Slate-300
-    doc.setLineWidth(0.5);
-    doc.line(14, sigY, 64, sigY);
+    doc.setLineWidth(0.4);
+    doc.line(14, sigY, 68, sigY);
 
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(8.5);
+    doc.setFontSize(12);
     doc.setTextColor(51, 65, 85); // Slate-700
-    doc.text("Revd. Daniel O. Ogunde", 14, sigY + 5);
+    doc.text("Revd. Daniel O. Ogunde", 14, sigY + 4.8);
     doc.setFont("helvetica", "normal");
-    doc.setFontSize(7.5);
+    doc.setFontSize(9.5);
     doc.setTextColor(148, 163, 184); // Slate-400
-    doc.text("The Vicar", 14, sigY + 9);
+    doc.text("The Vicar", 14, sigY + 9.2);
 
     // Right signature line
     doc.setDrawColor(203, 213, 225); // Slate-300
-    doc.line(146, sigY, 196, sigY);
+    doc.line(142, sigY, 196, sigY);
 
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(8.5);
+    doc.setFontSize(12);
     doc.setTextColor(51, 65, 85); // Slate-700
-    doc.text("Mr. Lukmon Olowu", 196, sigY + 5, { align: "right" });
+    doc.text("Mr. Lukmon Olowu", 196, sigY + 4.8, { align: "right" });
     doc.setFont("helvetica", "normal");
-    doc.setFontSize(7.5);
+    doc.setFontSize(9.5);
     doc.setTextColor(148, 163, 184); // Slate-400
-    doc.text("The Treasurer", 196, sigY + 9, { align: "right" });
+    doc.text("The Treasurer", 196, sigY + 9.2, { align: "right" });
 
     // Save document
     const reportName =
@@ -719,40 +702,35 @@ export default function Reports({ transactions, userProfile, onQuickAdd }: Repor
       format: "a4"
     });
 
-    let y = 39;
+    let y = 29;
 
     // --- PAGE HEADER ---
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(9);
+    doc.setFontSize(10);
     doc.setTextColor(37, 99, 235); // Blue-600
-    doc.text("IJEBU ANGLICAN DIOCESE", 105, 16, { align: "center" });
+    doc.text("IJEBU ANGLICAN DIOCESE", 105, 11, { align: "center" });
 
     doc.setFont("helvetica", "bold");
     doc.setFontSize(14);
     doc.setTextColor(15, 23, 42); // Slate-900
     const orgName = (userProfile?.organizationName || "Grace Sanctuary").toUpperCase();
-    doc.text(orgName, 105, 23, { align: "center" });
+    doc.text(orgName, 105, 17, { align: "center" });
 
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(11);
+    doc.setFontSize(12);
     doc.setTextColor(71, 85, 105); // Slate-600
     const periodText = timeframeFilter === "all"
       ? "Executive Summary Statement for All Records"
       : `Executive Summary Statement for ${getPeriodLabel()}`;
-    doc.text(periodText, 105, 29, { align: "center" });
-
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(7.5);
-    doc.setTextColor(100, 116, 139);
-    doc.text("Executive Summary Report", 196, 16, { align: "right" });
+    doc.text(periodText, 105, 22.5, { align: "center" });
 
     doc.setDrawColor(226, 232, 240);
     doc.setLineWidth(0.4);
-    doc.line(14, 33, 196, 33);
+    doc.line(14, 25.5, 196, 25.5);
 
     // --- SUMMARY METRIC CARDS ---
     const cardWidth = 57;
-    const cardHeight = 24;
+    const cardHeight = 20;
     const startX = 14;
     const gap = 5.5;
 
@@ -760,85 +738,85 @@ export default function Reports({ transactions, userProfile, onQuickAdd }: Repor
     doc.setFillColor(248, 250, 252);
     doc.setDrawColor(226, 232, 240);
     doc.setLineWidth(0.3);
-    doc.roundedRect(startX, y, cardWidth, cardHeight, 2, 2, "FD");
+    doc.roundedRect(startX, y, cardWidth, cardHeight, 1.5, 1.5, "FD");
 
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(7);
+    doc.setFontSize(8);
     doc.setTextColor(100, 116, 139);
-    doc.text("TOTAL INCOME", startX + 5, y + 6);
+    doc.text("TOTAL INCOME", startX + 4, y + 4.8);
 
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(13);
+    doc.setFontSize(12.5);
     doc.setTextColor(5, 150, 105);
-    doc.text(`+${formatPDFCurrency(totalIncome)}`, startX + 5, y + 14);
+    doc.text(`+${formatPDFCurrency(totalIncome)}`, startX + 4, y + 11.5);
 
     doc.setFont("helvetica", "italic");
-    doc.setFontSize(7);
+    doc.setFontSize(7.5);
     doc.setTextColor(148, 163, 184);
-    doc.text("Collections & donations", startX + 5, y + 20);
+    doc.text("Collections & donations", startX + 4, y + 16.5);
 
     // Card 2: Total Expenses
     doc.setFillColor(248, 250, 252);
-    doc.roundedRect(startX + cardWidth + gap, y, cardWidth, cardHeight, 2, 2, "FD");
+    doc.roundedRect(startX + cardWidth + gap, y, cardWidth, cardHeight, 1.5, 1.5, "FD");
 
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(7);
+    doc.setFontSize(8);
     doc.setTextColor(100, 116, 139);
-    doc.text("TOTAL EXPENSES", startX + cardWidth + gap + 5, y + 6);
+    doc.text("TOTAL EXPENSES", startX + cardWidth + gap + 4, y + 4.8);
 
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(13);
+    doc.setFontSize(12.5);
     doc.setTextColor(220, 38, 38);
-    doc.text(`-${formatPDFCurrency(totalExpenses)}`, startX + cardWidth + gap + 5, y + 14);
+    doc.text(`-${formatPDFCurrency(totalExpenses)}`, startX + cardWidth + gap + 4, y + 11.5);
 
     doc.setFont("helvetica", "italic");
-    doc.setFontSize(7);
+    doc.setFontSize(7.5);
     doc.setTextColor(148, 163, 184);
-    doc.text("Operational expenses", startX + cardWidth + gap + 5, y + 20);
+    doc.text("Operational expenses", startX + cardWidth + gap + 4, y + 16.5);
 
     // Card 3: Total Balance
     doc.setFillColor(248, 250, 252);
-    doc.roundedRect(startX + (cardWidth + gap) * 2, y, cardWidth, cardHeight, 2, 2, "FD");
+    doc.roundedRect(startX + (cardWidth + gap) * 2, y, cardWidth, cardHeight, 1.5, 1.5, "FD");
 
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(7);
+    doc.setFontSize(8);
     doc.setTextColor(100, 116, 139);
-    doc.text("TOTAL BALANCE", startX + (cardWidth + gap) * 2 + 5, y + 6);
+    doc.text("TOTAL BALANCE", startX + (cardWidth + gap) * 2 + 4, y + 4.8);
 
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(13);
+    doc.setFontSize(12.5);
     const balColor = totalBalance >= 0 ? [37, 99, 235] : [220, 38, 38];
     doc.setTextColor(balColor[0], balColor[1], balColor[2]);
-    doc.text(`${formatPDFCurrency(totalBalance)}`, startX + (cardWidth + gap) * 2 + 5, y + 14);
+    doc.text(`${formatPDFCurrency(totalBalance)}`, startX + (cardWidth + gap) * 2 + 4, y + 11.5);
 
     doc.setFont("helvetica", "italic");
-    doc.setFontSize(7);
+    doc.setFontSize(7.5);
     doc.setTextColor(148, 163, 184);
-    doc.text("Net liquidity impact", startX + (cardWidth + gap) * 2 + 5, y + 20);
+    doc.text("Net liquidity impact", startX + (cardWidth + gap) * 2 + 4, y + 16.5);
 
     y += cardHeight + 10;
 
     // --- CATEGORIES BREAKDOWN SECTION ---
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(8.5);
+    doc.setFontSize(11);
     doc.setTextColor(15, 23, 42);
 
-    doc.text("INFLOW CATEGORIES (REVENUES)", 14, y);
-    doc.text("OUTFLOW CATEGORIES (OPERATIONAL PAYOUTS)", 111, y);
+    doc.text("INFLOW CATEGORIES", 14, y);
+    doc.text("OUTFLOW CATEGORIES", 111, y);
 
     doc.setDrawColor(226, 232, 240);
     doc.setLineWidth(0.3);
     doc.line(14, y + 2, 99, y + 2);
     doc.line(111, y + 2, 196, y + 2);
 
-    y += 7;
+    y += 6;
 
     const maxCats = Math.max(incomeCategories.length, expenseCategories.length, 1);
-    const catRowHeight = 6;
+    const catRowHeight = 5.5;
 
     for (let i = 0; i < maxCats; i++) {
       doc.setFont("helvetica", "normal");
-      doc.setFontSize(8);
+      doc.setFontSize(9.5);
       doc.setTextColor(71, 85, 105);
 
       // Income category
@@ -888,33 +866,34 @@ export default function Reports({ transactions, userProfile, onQuickAdd }: Repor
       }
     }
 
-    y += (maxCats * catRowHeight) + 24;
+    y += (maxCats * catRowHeight) + 20;
 
-    // --- SIGNATURES ---
+    // --- SIGNATURES (12pt for official names, fits cleanly on 1 page) ---
+    const sigY = Math.min(276, Math.max(y + 8, 250));
     doc.setDrawColor(203, 213, 225);
-    doc.setLineWidth(0.3);
+    doc.setLineWidth(0.4);
 
     // Vicar
-    doc.line(14, y + 10, 80, y + 10);
+    doc.line(14, sigY, 68, sigY);
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(8);
+    doc.setFontSize(12);
     doc.setTextColor(51, 65, 85);
-    doc.text("Revd. Daniel O. Ogunde", 14, y + 15);
+    doc.text("Revd. Daniel O. Ogunde", 14, sigY + 4.8);
     doc.setFont("helvetica", "normal");
-    doc.setFontSize(7.5);
-    doc.setTextColor(100, 116, 139);
-    doc.text("The Vicar", 14, y + 19);
+    doc.setFontSize(9.5);
+    doc.setTextColor(148, 163, 184);
+    doc.text("The Vicar", 14, sigY + 9.2);
 
     // Treasurer
-    doc.line(130, y + 10, 196, y + 10);
+    doc.line(142, sigY, 196, sigY);
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(8);
+    doc.setFontSize(12);
     doc.setTextColor(51, 65, 85);
-    doc.text("Mr. Lukmon Olowu", 130, y + 15);
+    doc.text("Mr. Lukmon Olowu", 196, sigY + 4.8, { align: "right" });
     doc.setFont("helvetica", "normal");
-    doc.setFontSize(7.5);
-    doc.setTextColor(100, 116, 139);
-    doc.text("The Treasurer", 130, y + 19);
+    doc.setFontSize(9.5);
+    doc.setTextColor(148, 163, 184);
+    doc.text("The Treasurer", 196, sigY + 9.2, { align: "right" });
 
     const reportName = timeframeFilter === "all"
       ? "executive_summary_report_all_time"
@@ -1212,7 +1191,7 @@ export default function Reports({ transactions, userProfile, onQuickAdd }: Repor
           <div className="border border-slate-100 p-4 rounded-xl bg-slate-50/10">
             <h3 className="text-[12px] font-extrabold text-slate-900 border-b border-slate-200 pb-2 mb-3 flex items-center gap-1.5 uppercase tracking-wider">
               <TrendingUp className="h-4 w-4 text-emerald-600" />
-              Inflow Categories (Revenues)
+              Inflow Categories
             </h3>
             {incomeCategories.length === 0 ? (
               <p className="text-[12px] text-slate-400 italic py-2">No income streams reported.</p>
@@ -1239,7 +1218,7 @@ export default function Reports({ transactions, userProfile, onQuickAdd }: Repor
           <div className="border border-slate-100 p-4 rounded-xl bg-slate-50/10">
             <h3 className="text-[12px] font-extrabold text-slate-900 border-b border-slate-200 pb-2 mb-3 flex items-center gap-1.5 uppercase tracking-wider">
               <TrendingDown className="h-4 w-4 text-red-600" />
-              Outflow Categories (Operational Payouts)
+              Outflow Categories
             </h3>
             {expenseCategories.length === 0 ? (
               <p className="text-[12px] text-slate-400 italic py-2">No operational expenses reported.</p>
