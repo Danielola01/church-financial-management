@@ -113,7 +113,14 @@ export default function App() {
             notifications: data.notifications || [],
             disableTransactionButtons: data.disableTransactionButtons || false,
             managementYears: data.managementYears || [],
-            activeManagementYearId: data.activeManagementYearId || "year-2026"
+            activeManagementYearId: data.activeManagementYearId || "year-2026",
+            vicarName: data.vicarName || data.chairmanName || "",
+            vicarTitle: data.vicarTitle || data.chairmanTitle || "The Vicar",
+            chairmanName: data.chairmanName || data.vicarName || "",
+            chairmanTitle: data.chairmanTitle || data.vicarTitle || "The Chairman",
+            treasurerName: data.treasurerName || "",
+            treasurerTitle: data.treasurerTitle || "The Treasurer",
+            dioceseName: data.dioceseName || ""
           });
           if (data.activeManagementYearId) {
             setSelectedYearId(data.activeManagementYearId);
@@ -205,6 +212,69 @@ export default function App() {
         console.error("Error fetching real-time transactions:", error);
         setTransactionsLoading(false);
         handleFirestoreError(error, OperationType.LIST, "transactions");
+      }
+    );
+
+    return () => unsubscribe();
+  }, [currentUser, userProfile?.organizationName]);
+
+  // Listen to Organization Profiles to dynamically reflect registered Treasurer / Signatories
+  useEffect(() => {
+    if (!currentUser || !userProfile?.organizationName) return;
+
+    const orgProfilesQuery = query(
+      collection(db, "profiles"),
+      where("organizationName", "==", userProfile.organizationName)
+    );
+
+    const unsubscribe = onSnapshot(
+      orgProfilesQuery,
+      (snapshot) => {
+        let orgTreasurerName = "";
+        let orgTreasurerTitle = "The Treasurer";
+        let orgVicarName = "";
+        let orgVicarTitle = "The Vicar";
+
+        snapshot.forEach((docSnap) => {
+          const p = docSnap.data();
+          if (p.treasurerName && p.treasurerName.trim() !== "") {
+            orgTreasurerName = p.treasurerName.trim();
+            if (p.treasurerTitle) orgTreasurerTitle = p.treasurerTitle.trim();
+          } else if (p.role === "treasurer" && p.name && p.name.trim() !== "") {
+            orgTreasurerName = p.name.trim();
+          }
+
+          if (p.vicarName && p.vicarName.trim() !== "") {
+            orgVicarName = p.vicarName.trim();
+            if (p.vicarTitle) orgVicarTitle = p.vicarTitle.trim();
+          } else if (p.role === "chairman" && p.name && p.name.trim() !== "") {
+            orgVicarName = p.name.trim();
+          }
+        });
+
+        setUserProfile((prev) => {
+          if (!prev) return prev;
+          let changed = false;
+          const updated = { ...prev };
+
+          // Automatically inherit registered Treasurer if current profile has none set or needs sync
+          if (orgTreasurerName && prev.treasurerName !== orgTreasurerName) {
+            updated.treasurerName = orgTreasurerName;
+            updated.treasurerTitle = orgTreasurerTitle;
+            changed = true;
+          }
+
+          if (orgVicarName && !prev.vicarName && !prev.chairmanName) {
+            updated.vicarName = orgVicarName;
+            updated.vicarTitle = orgVicarTitle;
+            changed = true;
+          }
+
+          return changed ? updated : prev;
+        });
+      },
+      (err) => {
+        console.warn("Non-blocking org profiles sync error:", err);
       }
     );
 

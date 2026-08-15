@@ -18,7 +18,8 @@ import {
   AlertCircle,
   Loader2,
   X,
-  LogOut
+  LogOut,
+  FileSignature
 } from "lucide-react";
 import { motion } from "motion/react";
 
@@ -46,6 +47,21 @@ export default function UserProfilePage({
   const [organizationLogo, setOrganizationLogo] = useState<string>(userProfile?.organizationLogo || "");
   const [disableTransactionButtons, setDisableTransactionButtons] = useState(
     userProfile?.disableTransactionButtons || false
+  );
+
+  // Signatories & Diocese configuration
+  const [dioceseName, setDioceseName] = useState(userProfile?.dioceseName ?? "IJEBU ANGLICAN DIOCESE");
+  const [vicarName, setVicarName] = useState(
+    userProfile?.vicarName || userProfile?.chairmanName || (userProfile?.email === "ogundedanielola@gmail.com" ? "Revd. Daniel O. Ogunde" : userProfile?.name || "The Vicar / Chairman")
+  );
+  const [vicarTitle, setVicarTitle] = useState(
+    userProfile?.vicarTitle || userProfile?.chairmanTitle || "The Vicar"
+  );
+  const [treasurerName, setTreasurerName] = useState(
+    userProfile?.treasurerName || (userProfile?.email === "demotest@gmail.com" ? "Mr. Lukmon Olowu" : "")
+  );
+  const [treasurerTitle, setTreasurerTitle] = useState(
+    userProfile?.treasurerTitle || "The Treasurer"
   );
 
   const [loading, setLoading] = useState(false);
@@ -92,6 +108,15 @@ export default function UserProfilePage({
       setOrganizationName(userProfile.organizationName || "");
       setOrganizationType(userProfile.organizationType || "organization");
       setOrganizationLogo(userProfile.organizationLogo || "");
+      setDioceseName(userProfile.dioceseName !== undefined ? userProfile.dioceseName : "IJEBU ANGLICAN DIOCESE");
+      setVicarName(
+        userProfile.vicarName ||
+        userProfile.chairmanName ||
+        (userProfile.email === "ogundedanielola@gmail.com" ? "Revd. Daniel O. Ogunde" : userProfile.name || "")
+      );
+      setVicarTitle(userProfile.vicarTitle || userProfile.chairmanTitle || "The Vicar");
+      setTreasurerName(userProfile.treasurerName || (userProfile.email === "demotest@gmail.com" ? "Mr. Lukmon Olowu" : ""));
+      setTreasurerTitle(userProfile.treasurerTitle || "The Treasurer");
     }
   }, [userProfile]);
 
@@ -145,13 +170,49 @@ export default function UserProfilePage({
         organizationName: newOrgName,
         organizationType,
         organizationLogo,
-        disableTransactionButtons
+        disableTransactionButtons,
+        dioceseName: dioceseName.trim(),
+        vicarName: vicarName.trim(),
+        vicarTitle: vicarTitle.trim(),
+        chairmanName: vicarName.trim(),
+        chairmanTitle: vicarTitle.trim(),
+        treasurerName: treasurerName.trim(),
+        treasurerTitle: treasurerTitle.trim()
       });
 
-      // Seamlessly migrate existing transactions & other member profiles in background if the old organization name was changed
+      // Seamlessly propagate branding & signatories to other member profiles in the same organization
+      try {
+        const orgQuery = query(
+          collection(db, "profiles"),
+          where("organizationName", "==", oldOrgName || newOrgName)
+        );
+        const orgSnap = await getDocs(orgQuery);
+        if (!orgSnap.empty) {
+          const batch = writeBatch(db);
+          orgSnap.docs.forEach((d) => {
+            if (d.id !== userProfile.uid) {
+              batch.update(d.ref, {
+                organizationName: newOrgName,
+                dioceseName: dioceseName.trim(),
+                vicarName: vicarName.trim(),
+                vicarTitle: vicarTitle.trim(),
+                chairmanName: vicarName.trim(),
+                chairmanTitle: vicarTitle.trim(),
+                treasurerName: treasurerName.trim(),
+                treasurerTitle: treasurerTitle.trim(),
+                organizationLogo: organizationLogo
+              });
+            }
+          });
+          await batch.commit();
+        }
+      } catch (propError) {
+        console.error("Non-blocking error syncing organization profiles:", propError);
+      }
+
+      // Seamlessly migrate existing transactions if organization name was changed
       if (oldOrgName && newOrgName && oldOrgName !== newOrgName) {
         try {
-          // 1. Migrate transactions
           const transQuery = query(
             collection(db, "transactions"),
             where("organizationName", "==", oldOrgName)
@@ -161,22 +222,6 @@ export default function UserProfilePage({
             const batch = writeBatch(db);
             transSnap.docs.forEach((d) => {
               batch.update(d.ref, { organizationName: newOrgName });
-            });
-            await batch.commit();
-          }
-
-          // 2. Migrate other users in the same organization so they remain linked
-          const profilesQuery = query(
-            collection(db, "profiles"),
-            where("organizationName", "==", oldOrgName)
-          );
-          const profilesSnap = await getDocs(profilesQuery);
-          if (!profilesSnap.empty) {
-            const batch = writeBatch(db);
-            profilesSnap.docs.forEach((d) => {
-              if (d.id !== userProfile.uid) {
-                batch.update(d.ref, { organizationName: newOrgName });
-              }
             });
             await batch.commit();
           }
@@ -497,6 +542,103 @@ export default function UserProfilePage({
                       />
                     </label>
                     <p className="mt-1.5 text-2xs text-slate-400">Supports PNG, JPG, or SVG up to 2MB.</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Official Report Header & Signatories Card */}
+              <div className="p-5 bg-slate-50/80 border border-slate-200 rounded-2xl space-y-4">
+                <div className="border-b border-slate-200 pb-3">
+                  <h4 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                    <FileSignature className="h-4 w-4 text-blue-600" />
+                    Official Statement Header & Signatories
+                  </h4>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Configure the diocese/parent header and executive officers (Chairman / Vicar & Treasurer) specific to this church or organisation. These names and titles appear automatically on all statements and downloaded PDFs.
+                  </p>
+                </div>
+
+                {/* Diocese / Parent Body Header */}
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Diocese / Parent Body Header (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={dioceseName}
+                    onChange={(e) => setDioceseName(e.target.value)}
+                    className="block w-full px-3.5 py-2 border border-slate-200 rounded-xl text-slate-900 text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white placeholder:text-slate-400"
+                    placeholder="e.g. IJEBU ANGLICAN DIOCESE (or leave blank if none)"
+                  />
+                  <p className="text-2xs text-slate-400 mt-1">
+                    Displayed in blue capital letters at the very top of monthly and annual financial statements.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
+                  {/* First Signatory: Chairman / Vicar */}
+                  <div className="p-3.5 bg-white border border-slate-200 rounded-xl space-y-3 shadow-3xs">
+                    <span className="text-[11px] font-extrabold uppercase tracking-wider text-blue-700 block">
+                      First Signatory (Chairman / Vicar)
+                    </span>
+                    <div>
+                      <label className="block text-2xs font-bold uppercase tracking-wider text-slate-500 mb-1">
+                        Full Name & Title
+                      </label>
+                      <input
+                        type="text"
+                        value={vicarName}
+                        onChange={(e) => setVicarName(e.target.value)}
+                        className="block w-full px-3 py-1.5 border border-slate-200 rounded-lg text-slate-900 text-xs focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                        placeholder="e.g. Revd. Daniel O. Ogunde"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-2xs font-bold uppercase tracking-wider text-slate-500 mb-1">
+                        Designation / Role Title
+                      </label>
+                      <input
+                        type="text"
+                        value={vicarTitle}
+                        onChange={(e) => setVicarTitle(e.target.value)}
+                        className="block w-full px-3 py-1.5 border border-slate-200 rounded-lg text-slate-900 text-xs focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                        placeholder="e.g. The Vicar, The Chairman, Senior Pastor"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Second Signatory: Treasurer */}
+                  <div className="p-3.5 bg-white border border-slate-200 rounded-xl space-y-3 shadow-3xs">
+                    <span className="text-[11px] font-extrabold uppercase tracking-wider text-emerald-700 block">
+                      Second Signatory (Treasurer)
+                    </span>
+                    <div>
+                      <label className="block text-2xs font-bold uppercase tracking-wider text-slate-500 mb-1">
+                        Full Name & Title
+                      </label>
+                      <input
+                        type="text"
+                        value={treasurerName}
+                        onChange={(e) => setTreasurerName(e.target.value)}
+                        className="block w-full px-3 py-1.5 border border-slate-200 rounded-lg text-slate-900 text-xs focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                        placeholder="Auto-filled when Treasurer registers (or type name)"
+                      />
+                      <p className="text-3xs text-slate-400 mt-1">
+                        Left blank on statements until a user registers as Treasurer under this organisation.
+                      </p>
+                    </div>
+                    <div>
+                      <label className="block text-2xs font-bold uppercase tracking-wider text-slate-500 mb-1">
+                        Designation / Role Title
+                      </label>
+                      <input
+                        type="text"
+                        value={treasurerTitle}
+                        onChange={(e) => setTreasurerTitle(e.target.value)}
+                        className="block w-full px-3 py-1.5 border border-slate-200 rounded-lg text-slate-900 text-xs focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                        placeholder="e.g. The Treasurer, Financial Secretary"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>

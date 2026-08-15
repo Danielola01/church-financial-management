@@ -42,6 +42,23 @@ export default function Reports({ transactions, userProfile, onQuickAdd }: Repor
   const [isSummaryOnlyPrint, setIsSummaryOnlyPrint] = useState(false);
   const [isExportDropdownOpen, setIsExportDropdownOpen] = useState(false);
 
+  // Dynamic Diocese Header & Signatories per church / organisation
+  const dioceseHeader =
+    userProfile?.dioceseName !== undefined && userProfile?.dioceseName !== ""
+      ? userProfile.dioceseName
+      : "IJEBU ANGLICAN DIOCESE";
+
+  const firstSignatoryName =
+    userProfile?.vicarName ||
+    userProfile?.chairmanName ||
+    (userProfile?.email === "ogundedanielola@gmail.com" ? "Revd. Daniel O. Ogunde" : userProfile?.name || "Revd. Daniel O. Ogunde");
+  const firstSignatoryTitle = userProfile?.vicarTitle || userProfile?.chairmanTitle || "The Vicar";
+
+  const secondSignatoryName =
+    userProfile?.treasurerName ||
+    (userProfile?.email === "demotest@gmail.com" ? "Mr. Lukmon Olowu" : "");
+  const secondSignatoryTitle = userProfile?.treasurerTitle || "The Treasurer";
+
   // Helpers to calculate week ranges
   const getWeekRange = (dateStr: string) => {
     const baseDate = new Date(dateStr);
@@ -295,11 +312,13 @@ export default function Reports({ transactions, userProfile, onQuickAdd }: Repor
 
     // --- PAGE HEADER FUNCTION ---
     const drawHeader = (pageNumber: number, showPageNum: boolean = false) => {
-      // Ijebu Anglican Diocese
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(10);
-      doc.setTextColor(37, 99, 235); // Blue-600
-      doc.text("IJEBU ANGLICAN DIOCESE", 105, 11, { align: "center" });
+      // Diocese / Parent Body Header
+      if (dioceseHeader) {
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(10);
+        doc.setTextColor(37, 99, 235); // Blue-600
+        doc.text(dioceseHeader.toUpperCase(), 105, 11, { align: "center" });
+      }
 
       // Registered Org Name
       doc.setFont("helvetica", "bold");
@@ -667,24 +686,31 @@ export default function Reports({ transactions, userProfile, onQuickAdd }: Repor
     doc.setFont("helvetica", "bold");
     doc.setFontSize(12);
     doc.setTextColor(51, 65, 85); // Slate-700
-    doc.text("Revd. Daniel O. Ogunde", 14, sigY + 4.8);
+    doc.text(firstSignatoryName, 14, sigY + 4.8);
     doc.setFont("helvetica", "normal");
     doc.setFontSize(9.5);
     doc.setTextColor(148, 163, 184); // Slate-400
-    doc.text("The Vicar", 14, sigY + 9.2);
+    doc.text(firstSignatoryTitle, 14, sigY + 9.2);
 
     // Right signature line
     doc.setDrawColor(203, 213, 225); // Slate-300
     doc.line(142, sigY, 196, sigY);
 
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(12);
-    doc.setTextColor(51, 65, 85); // Slate-700
-    doc.text("Mr. Lukmon Olowu", 196, sigY + 4.8, { align: "right" });
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(9.5);
-    doc.setTextColor(148, 163, 184); // Slate-400
-    doc.text("The Treasurer", 196, sigY + 9.2, { align: "right" });
+    if (secondSignatoryName && secondSignatoryName.trim() !== "") {
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(12);
+      doc.setTextColor(51, 65, 85); // Slate-700
+      doc.text(secondSignatoryName, 196, sigY + 4.8, { align: "right" });
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9.5);
+      doc.setTextColor(148, 163, 184); // Slate-400
+      doc.text(secondSignatoryTitle, 196, sigY + 9.2, { align: "right" });
+    } else {
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9.5);
+      doc.setTextColor(148, 163, 184); // Slate-400
+      doc.text(secondSignatoryTitle || "The Treasurer", 196, sigY + 6.5, { align: "right" });
+    }
 
     // Save document
     const reportName =
@@ -705,10 +731,12 @@ export default function Reports({ transactions, userProfile, onQuickAdd }: Repor
     let y = 29;
 
     // --- PAGE HEADER ---
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(10);
-    doc.setTextColor(37, 99, 235); // Blue-600
-    doc.text("IJEBU ANGLICAN DIOCESE", 105, 11, { align: "center" });
+    if (dioceseHeader) {
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(10);
+      doc.setTextColor(37, 99, 235); // Blue-600
+      doc.text(dioceseHeader.toUpperCase(), 105, 11, { align: "center" });
+    }
 
     doc.setFont("helvetica", "bold");
     doc.setFontSize(14);
@@ -873,27 +901,34 @@ export default function Reports({ transactions, userProfile, onQuickAdd }: Repor
     doc.setDrawColor(203, 213, 225);
     doc.setLineWidth(0.4);
 
-    // Vicar
+    // Vicar / Chairman
     doc.line(14, sigY, 68, sigY);
     doc.setFont("helvetica", "bold");
     doc.setFontSize(12);
     doc.setTextColor(51, 65, 85);
-    doc.text("Revd. Daniel O. Ogunde", 14, sigY + 4.8);
+    doc.text(firstSignatoryName, 14, sigY + 4.8);
     doc.setFont("helvetica", "normal");
     doc.setFontSize(9.5);
     doc.setTextColor(148, 163, 184);
-    doc.text("The Vicar", 14, sigY + 9.2);
+    doc.text(firstSignatoryTitle, 14, sigY + 9.2);
 
     // Treasurer
     doc.line(142, sigY, 196, sigY);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(12);
-    doc.setTextColor(51, 65, 85);
-    doc.text("Mr. Lukmon Olowu", 196, sigY + 4.8, { align: "right" });
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(9.5);
-    doc.setTextColor(148, 163, 184);
-    doc.text("The Treasurer", 196, sigY + 9.2, { align: "right" });
+    if (secondSignatoryName && secondSignatoryName.trim() !== "") {
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(12);
+      doc.setTextColor(51, 65, 85);
+      doc.text(secondSignatoryName, 196, sigY + 4.8, { align: "right" });
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9.5);
+      doc.setTextColor(148, 163, 184);
+      doc.text(secondSignatoryTitle, 196, sigY + 9.2, { align: "right" });
+    } else {
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9.5);
+      doc.setTextColor(148, 163, 184);
+      doc.text(secondSignatoryTitle || "The Treasurer", 196, sigY + 6.5, { align: "right" });
+    }
 
     const reportName = timeframeFilter === "all"
       ? "executive_summary_report_all_time"
@@ -1119,9 +1154,11 @@ export default function Reports({ transactions, userProfile, onQuickAdd }: Repor
       >
         {/* Header (Invoice-style) */}
         <div className="border-b-2 border-slate-900 pb-4 text-center space-y-1.5">
-          <span className="text-xs font-extrabold uppercase tracking-widest text-blue-600 block">
-            Ijebu Anglican Diocese
-          </span>
+          {dioceseHeader && (
+            <span className="text-xs font-extrabold uppercase tracking-widest text-blue-600 block">
+              {dioceseHeader}
+            </span>
+          )}
           <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight font-sans block">
             {userProfile?.organizationName || "Grace Sanctuary"}
           </h2>
@@ -1379,16 +1416,20 @@ export default function Reports({ transactions, userProfile, onQuickAdd }: Repor
           <div className="space-y-4">
             <div className="border-b border-slate-300 h-10 w-2/3"></div>
             <div className="text-[12px] text-slate-500">
-              <p className="font-bold text-slate-700">Revd. Daniel O. Ogunde</p>
-              <p>The Vicar</p>
+              <p className="font-bold text-slate-700">{firstSignatoryName}</p>
+              <p>{firstSignatoryTitle}</p>
             </div>
           </div>
 
           <div className="space-y-4 text-right flex flex-col items-end">
             <div className="border-b border-slate-300 h-10 w-2/3"></div>
             <div className="text-[12px] text-slate-500">
-              <p className="font-bold text-slate-700">Mr. Lukmon Olowu</p>
-              <p>The Treasurer</p>
+              {secondSignatoryName && secondSignatoryName.trim() !== "" ? (
+                <p className="font-bold text-slate-700">{secondSignatoryName}</p>
+              ) : (
+                <p className="h-4"></p>
+              )}
+              <p>{secondSignatoryTitle || "The Treasurer"}</p>
             </div>
           </div>
         </div>

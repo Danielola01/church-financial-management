@@ -4,7 +4,7 @@ import {
   createUserWithEmailAndPassword,
   sendPasswordResetEmail
 } from "firebase/auth";
-import { doc, setDoc } from "firebase/firestore";
+import { doc, setDoc, query, where, collection, getDocs, writeBatch } from "firebase/firestore";
 import { auth, db, handleFirestoreError, OperationType } from "../firebase";
 import { UserRole } from "../types";
 import {
@@ -149,17 +149,72 @@ export default function Login({ onLoginSuccess }: LoginProps) {
 
         // Save profile to Firestore with Step 2 variables
         try {
-          await setDoc(doc(db, "profiles", uid), {
+          const trimmedName = name.trim() || "Anonymous User";
+          const trimmedOrgName = organizationName.trim();
+          
+          const profileData: any = {
             uid,
-            name: name || "Anonymous User",
+            name: trimmedName,
             email,
             role,
             organizationType,
             organizationLogo,
             phoneNumber,
-            organizationName: organizationName.trim(),
+            organizationName: trimmedOrgName,
             createdAt: new Date().toISOString()
-          });
+          };
+
+          if (role === "treasurer") {
+            profileData.treasurerName = trimmedName;
+            profileData.treasurerTitle = "The Treasurer";
+          } else if (role === "chairman") {
+            profileData.vicarName = trimmedName;
+            profileData.vicarTitle = "The Chairman";
+            profileData.chairmanName = trimmedName;
+            profileData.chairmanTitle = "The Chairman";
+          }
+
+          // Check if members of the same organization already exist to inherit branding & sync new treasurer
+          try {
+            const orgQuery = query(
+              collection(db, "profiles"),
+              where("organizationName", "==", trimmedOrgName)
+            );
+            const orgSnap = await getDocs(orgQuery);
+            if (!orgSnap.empty) {
+              const batch = writeBatch(db);
+              orgSnap.docs.forEach((docSnap) => {
+                const existingData = docSnap.data();
+                // If the new user is registering as Treasurer, propagate their name to other members
+                if (role === "treasurer") {
+                  batch.update(docSnap.ref, {
+                    treasurerName: trimmedName,
+                    treasurerTitle: "The Treasurer"
+                  });
+                }
+                // Inherit diocese / chairman / logo from existing church profile if available
+                if (existingData.dioceseName && !profileData.dioceseName) {
+                  profileData.dioceseName = existingData.dioceseName;
+                }
+                if (existingData.vicarName && !profileData.vicarName) {
+                  profileData.vicarName = existingData.vicarName;
+                  profileData.vicarTitle = existingData.vicarTitle || "The Vicar";
+                }
+                if (existingData.treasurerName && !profileData.treasurerName && role !== "treasurer") {
+                  profileData.treasurerName = existingData.treasurerName;
+                  profileData.treasurerTitle = existingData.treasurerTitle || "The Treasurer";
+                }
+                if (existingData.organizationLogo && !profileData.organizationLogo) {
+                  profileData.organizationLogo = existingData.organizationLogo;
+                }
+              });
+              await batch.commit();
+            }
+          } catch (syncErr) {
+            console.warn("Non-blocking profile sync during signup:", syncErr);
+          }
+
+          await setDoc(doc(db, "profiles", uid), profileData);
         } catch (dbErr) {
           handleFirestoreError(dbErr, OperationType.WRITE, `profiles/${uid}`);
         }
